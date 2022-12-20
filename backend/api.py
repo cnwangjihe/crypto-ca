@@ -25,6 +25,8 @@ from cryptography.exceptions import InvalidSignature
 
 from starlette.middleware.cors import CORSMiddleware
 
+TOLERATE_TIME = 30
+
 app = FastAPI()
 
 if "DB_URL" in os.environ:
@@ -102,7 +104,11 @@ def load_ECDSA_pubkey(pubkey: str) -> ec.EllipticCurvePublicKey:
         raise AppException("pubkey should be ECDSA.")
     return user_pubkey
 
-def verify(user: User, msg: str, sig: Signature = Body()):
+def check_expire(sig: Signature):
+    if abs(time.time() - sig.timestamp / 1000) > TOLERATE_TIME:
+        raise AppException("sig expired.")
+
+def verify(user: User, msg: str, sig: Signature):
     if sig.timestamp <= user["timestamp"]:
         raise AppException("invalid timestamp.")
     full_msg = f"{sig.timestamp}||{user['uid']}||{user['pubkey']}||{msg}"
@@ -131,6 +137,7 @@ def sign_cert(uid: str, sig: Signature, pubkey: str = Body()):
     else:
         raise AppException("uid already in use.")
 
+    check_expire(sig)
     msg = f"{sig.timestamp}||{uid}||{pubkey}||POST:/user"
     verify_sig(pubkey, msg, sig.sig)
 
@@ -195,6 +202,7 @@ class SingleSignature(BaseModel):
 @app.delete("/user")
 @sign_result_with_ca
 def revoke_cert(uid: str, sig: SingleSignature):
+    check_expire(sig.sig)
     db = get_db()
     user = query_user(db["users"], uid)
     verify(user, "DELETE:/user", sig.sig)
