@@ -82,7 +82,7 @@ export default defineComponent({
       console.dir(uploadFile)
       let reader = new FileReader()
       if (uploadFile.raw?.size === undefined || uploadFile.raw?.size > 0x1000) {
-        ElMessage.error("pubkey too large.")
+        ElMessage.error("privkey too large.")
         return
       }
       if (uploadFile.raw !== undefined) {
