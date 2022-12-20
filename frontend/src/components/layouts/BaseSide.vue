@@ -2,7 +2,7 @@
   <el-menu
     class="el-menu-vertical-demo"
     :router=true
-    :default-active="this.$route.path"
+    :default-active="route.path"
   >
     <el-menu-item index="/sign">
       <el-icon><icon-circle-plus /></el-icon>
@@ -30,6 +30,10 @@ import {
   MessageBox as IconMessageBox,
   MoonNight as IconMoonNight
 } from '@element-plus/icons-vue'
+
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
 
 </script>
 

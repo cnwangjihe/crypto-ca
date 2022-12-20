@@ -9,6 +9,7 @@ from pymongo.collection import Collection
 import datetime
 import json
 import time
+import os
 
 from typing import TypedDict, Union
 
@@ -26,13 +27,14 @@ from starlette.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-origins = ["http://127.0.0.1:8080", "*"]
-db_addr = "mongodb://127.0.0.1:27017/"
+if "DB_URL" in os.environ:
+    db_addr = os.environ["DB_URL"]
+else:
+    db_addr = "mongodb://mongodb:27017/"
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"])
 

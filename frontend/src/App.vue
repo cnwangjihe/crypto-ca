@@ -1,12 +1,7 @@
-
-<script lang="ts" setup>
-import { toggleDark } from '~/composables';
-</script>
-
 <template>
   <el-config-provider namespace="ep">
-    <el-menu class="el-menu-demo" mode="horizontal" :default-active="this.$route.path">
-      <el-menu-item index="/welcome" @click="this.$router.push('/welcome')">证书管理系统 (Certificate Authority)</el-menu-item>
+    <el-menu class="el-menu-demo" mode="horizontal" :default-active="route.path">
+      <el-menu-item index="/welcome" @click="router.push('/welcome')">证书管理系统 (Certificate Authority)</el-menu-item>
       <el-menu-item h="full" @click="toggleDark()">
         <button class="border-none w-full bg-transparent cursor-pointer" style="height: var(--ep-menu-item-height);">
           <i inline-flex i="dark:ep-moon ep-sunny" />
@@ -24,6 +19,14 @@ import { toggleDark } from '~/composables';
   </el-config-provider>
 </template>
 
+<script lang="ts" setup>
+import { toggleDark } from './composables'
+import { useRouter, useRoute } from 'vue-router'
+
+const route = useRoute()
+const router = useRouter()
+
+</script>
 
 <style>
 #app {
