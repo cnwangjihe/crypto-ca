@@ -1,5 +1,3 @@
-
-
 <template>
   <div id="user-list">
     <el-input v-model="search" size="large" placeholder="Type to search UID" />

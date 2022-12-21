@@ -30,7 +30,7 @@ const getXorKey = async (password: string, length: number) => {
       salt: str2ab("\x8doSl\x13h\x15B2\x16\x8d.\xac-O\x96"),
       iterations: 1926,
       hash: "SHA-256",
-    }, baseKey, Math.floor(length / 8) * 8
+    }, baseKey, length * 8
   );
   return key.slice(0, length)
 }
