@@ -22,6 +22,10 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import NameOID
 from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric.utils import (
+    decode_dss_signature,
+    encode_dss_signature,
+)
 
 from starlette.middleware.cors import CORSMiddleware
 
@@ -32,7 +36,7 @@ app = FastAPI()
 if "DB_URL" in os.environ:
     db_addr = os.environ["DB_URL"]
 else:
-    db_addr = "mongodb://mongodb:27017/"
+    db_addr = "mongodb://127.0.0.1:27017/"
 
 app.add_middleware(
     CORSMiddleware,
@@ -52,6 +56,7 @@ class User(TypedDict):
 class Signature(BaseModel):
     sig: str
     timestamp: int
+    ieee_p1363: bool
 
 
 class AppException(Exception):
@@ -72,6 +77,16 @@ def sign_result_with_ca(func):
         data = func(*args, **kwargs)
         return sign_with_ca(data)
     return wrapper
+
+def ieee_p1363_to_der(sig: bytes) -> bytes:
+    return encode_dss_signature(
+        int.from_bytes(sig[:32], "big"),
+        int.from_bytes(sig[32:], "big"),
+    )
+
+def der_to_ieee_p1363(sig: bytes) -> bytes:
+    r, s = decode_dss_signature(sig)
+    return int.to_bytes(r, 32, "big") + int.to_bytes(s, 32, "big")
 
 
 @app.exception_handler(AppException)
@@ -109,16 +124,19 @@ def check_expire(sig: Signature):
         raise AppException("sig expired.")
 
 def verify(user: User, msg: str, sig: Signature):
+    check_expire(sig)
     if sig.timestamp <= user["timestamp"]:
         raise AppException("invalid timestamp.")
     full_msg = f"{sig.timestamp}||{user['uid']}||{user['pubkey']}||{msg}"
-    verify_sig(user["pubkey"], full_msg, sig.sig)
+    raw_sig = b64decode(sig.sig)
+    if sig.ieee_p1363:
+        raw_sig = ieee_p1363_to_der(raw_sig)
+    verify_sig(user["pubkey"], full_msg, raw_sig)
 
-def verify_sig(pubkey: str, msg: str, sig: str):
-    return
+def verify_sig(pubkey: str, msg: str, sig: bytes):
     user_pubkey = load_ECDSA_pubkey(pubkey)
     try:
-        user_pubkey.verify(b64decode(sig), msg.encode(), ec.ECDSA(hashes.SHA256()))
+        user_pubkey.verify(sig, msg.encode(), ec.ECDSA(hashes.SHA256()))
     except InvalidSignature:
         raise AppException("invalid signature.")
 
@@ -137,9 +155,12 @@ def sign_cert(uid: str, sig: Signature, pubkey: str = Body()):
     else:
         raise AppException("uid already in use.")
 
-    check_expire(sig)
-    msg = f"{sig.timestamp}||{uid}||{pubkey}||POST:/user"
-    verify_sig(pubkey, msg, sig.sig)
+    verify({
+        "uid": uid,
+        "pubkey": pubkey,
+        "cert_digest": "",
+        "timestamp": 0
+    }, "POST:/user", sig)
 
     issuer = x509.Name([
         x509.NameAttribute(NameOID.COUNTRY_NAME, u"CN"),
@@ -201,11 +222,10 @@ class SingleSignature(BaseModel):
 
 @app.delete("/user")
 @sign_result_with_ca
-def revoke_cert(uid: str, sig: SingleSignature):
-    check_expire(sig.sig)
+def revoke_cert(uid: str, body: SingleSignature):
     db = get_db()
     user = query_user(db["users"], uid)
-    verify(user, "DELETE:/user", sig.sig)
+    verify(user, "DELETE:/user", body.sig)
     db["users"].delete_one({"uid": uid})
     db["revoke"].insert_one({"cert_digest": user["cert_digest"], "timestamp": int(time.time() * 1000)})
     return {"result": 0}

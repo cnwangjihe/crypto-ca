@@ -115,7 +115,8 @@ const submit = async () => {
     body: JSON.stringify({
       sig: {
         sig: sig,
-        timestamp: timestamp
+        timestamp: timestamp,
+        ieee_p1363: true
       }
     })
   })
