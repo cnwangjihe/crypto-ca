@@ -24,7 +24,8 @@
         </el-upload>
       </el-col>
     </el-row>
-    <el-input v-model="uid" maxlength="64" placeholder="请输入证书UID" show-word-limit type="text" />
+    <el-input v-model="uid" size="large" maxlength="64" placeholder="请输入证书UID" show-word-limit type="text" />
+    <el-input v-model="passwd" size="large" placeholder="请输入私钥密码" type="password" show-password />
     <div style="float: right; padding-top: 20px;">
       <el-button type="danger" @click="submit">吊销</el-button>
     </div>
@@ -36,16 +37,16 @@ import type { UploadFile } from 'element-plus'
 
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { generateSigature } from '~/composables'
+import { generateSigature, importPEMPrivKey } from '~/composables'
 import { UploadFilled } from '@element-plus/icons-vue'
 
 const uid = ref<string>("")
+const passwd = ref<string>("")
 let pubkey = ""
 let privkey = ""
 
 const readPubkey = async (uploadFile: UploadFile) => {
-  console.log("pubkey")
-  console.dir(uploadFile)
+
   let reader = new FileReader()
   if (uploadFile.raw?.size === undefined || uploadFile.raw?.size > 0x1000) {
     ElMessage.error("pubkey too large.")
@@ -69,8 +70,6 @@ const readPubkey = async (uploadFile: UploadFile) => {
 }
 
 const readPrivkey = async (uploadFile: UploadFile) => {
-  console.log("privkey")
-  console.dir(uploadFile)
   let reader = new FileReader()
   if (uploadFile.raw?.size === undefined || uploadFile.raw?.size > 0x1000) {
     ElMessage.error("privkey too large.")
@@ -98,13 +97,22 @@ const submit = async () => {
     ElMessage.error("please complete the form first.")
     return
   }
+  if (passwd.value === "") {
+    ElMessage.error("passwd cannot be empty")
+    return
+  }
   const timestamp = Date.now();
-  // f"{sig.timestamp}||{user['uid']}||{user['pubkey']}||{msg}"
-  const sig = await generateSigature(
-    privkey,
-    timestamp.toString() + "||" + uid.value + "||" + pubkey + "||DELETE:/user"
-  )
-  console.log(sig)
+  let sig;
+  try {
+    sig = await generateSigature(
+      await importPEMPrivKey(privkey, passwd.value),
+      // f"{sig.timestamp}||{user['uid']}||{user['pubkey']}||{msg}"
+      `${timestamp.toString()}||${uid.value}||${pubkey}||DELETE:/user`
+    )
+  } catch (e) {
+    ElMessage.error("privkey load failed.")
+    return
+  }
   const response = await fetch("api/user?" + new URLSearchParams({ uid: uid.value }), {
     method: "DELETE",
     mode: "same-origin",
@@ -131,7 +139,7 @@ const submit = async () => {
   }
   ElMessage({
     type: "success",
-    message: "cert revoked!"
+    message: "cert revoked."
   })
 }
 

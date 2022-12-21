@@ -8,5 +8,6 @@ frontend没有使用docker进行构建，需要您在本地先build，再使用d
 cd frontend
 yarn install
 yarn build
+cd ..
 docker compose up --build
 ```

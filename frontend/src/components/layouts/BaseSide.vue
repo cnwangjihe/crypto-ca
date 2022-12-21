@@ -1,8 +1,8 @@
 <template>
   <el-menu
     class="el-menu-vertical-demo"
-    :router=true
     :default-active="route.path"
+    router
   >
     <el-menu-item index="/sign">
       <el-icon><icon-circle-plus /></el-icon>
@@ -20,6 +20,10 @@
       <el-icon><icon-moon-night /></el-icon>
       <span>吊销列表</span>
     </el-menu-item>
+    <el-menu-item index="/gen_key">
+      <el-icon><icon-document-add /></el-icon>
+      <span>生成密钥</span>
+    </el-menu-item>
   </el-menu>
 </template>
 
@@ -28,7 +32,8 @@ import {
   CirclePlus as IconCirclePlus,
   Delete as IconDelete,
   MessageBox as IconMessageBox,
-  MoonNight as IconMoonNight
+  MoonNight as IconMoonNight,
+  DocumentAdd as IconDocumentAdd
 } from '@element-plus/icons-vue'
 
 import { useRoute } from 'vue-router'

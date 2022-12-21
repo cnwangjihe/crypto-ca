@@ -2,7 +2,7 @@
 
 <template>
   <div id="user-list">
-    <el-input v-model="search" placeholder="Type to search UID" />
+    <el-input v-model="search" size="large" placeholder="Type to search UID" />
     <el-table :data="filterTableData" style="width: 100%">
       <el-table-column prop="uid" label="UID" sortable width="180" />
       <el-table-column prop="pubkey_digest" label="Pubkey MD5" />

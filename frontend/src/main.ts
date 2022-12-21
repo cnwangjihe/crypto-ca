@@ -6,6 +6,7 @@ import Welcome from "./components/Welcome.vue"
 import Revoke from "./components/Revoke.vue"
 import UserList from "./components/UserList.vue"
 import RevokeList from "./components/RevokeList.vue"
+import GenKey from "./components/GenKey.vue"
 
 // import "~/styles/element/index.scss";
 
@@ -38,6 +39,9 @@ const routes = [{
   }, {
     path: '/revoke_list',
     component: RevokeList
+  }, {
+    path: '/gen_key',
+    component: GenKey
   }
 ]
    
