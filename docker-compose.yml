@@ -14,7 +14,8 @@ services:
     depends_on:
       - mongodb
     environment:
-      DB_URL: mongodb://mongodb:27017
+      - DB_URL=mongodb://mongodb:27017
+      - ROOT_PATH=/api
   frontend:
     image: nginx
     ports:
