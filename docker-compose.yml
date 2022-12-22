@@ -5,8 +5,8 @@ services:
     image: mongo
     volumes:
       - db_volume:/data/db:rw
-    expose:
-      - 27017
+    ports:
+      - 27017:27017
   backend:
     build: "./backend"
     ports: 

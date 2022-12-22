@@ -37,7 +37,7 @@ import type { UploadFile } from 'element-plus'
 
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { generateSigature, importPEMPrivKey } from '~/composables'
+import { generateSignature, importPEMPrivKey } from '~/composables'
 import { UploadFilled } from '@element-plus/icons-vue'
 
 const uid = ref<string>("")
@@ -104,7 +104,7 @@ const submit = async () => {
   const timestamp = Date.now();
   let sig;
   try {
-    sig = await generateSigature(
+    sig = await generateSignature(
       await importPEMPrivKey(privkey, passwd.value),
       // f"{sig.timestamp}||{user['uid']}||{user['pubkey']}||{msg}"
       `${timestamp.toString()}||${uid.value}||${pubkey}||DELETE:/user`

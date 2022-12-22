@@ -11,6 +11,8 @@ import json
 import time
 import os
 
+from utils import load_ECDSA_privkey, xor_ECDSA_privkey
+
 from typing import TypedDict, Union
 
 from hashlib import md5
@@ -30,6 +32,7 @@ from cryptography.hazmat.primitives.asymmetric.utils import (
 from starlette.middleware.cors import CORSMiddleware
 
 TOLERATE_TIME = 30
+PRIVKEY_PASSWORD = "CA_PRIVKEY_PASSWORD"
 
 app = FastAPI()
 
@@ -44,8 +47,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"])
 
-ca_privkey: ec.EllipticCurvePrivateKey = \
-    serialization.load_pem_private_key(open("ca.pem", "rb").read(), password=None) # type: ignore
+ca_privkey = load_ECDSA_privkey(
+    xor_ECDSA_privkey(open("ca_priv.pem", "r").read(), PRIVKEY_PASSWORD))
 
 class User(TypedDict):
     uid: str

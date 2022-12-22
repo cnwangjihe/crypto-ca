@@ -86,7 +86,7 @@ export const exportPEMPrivKey = async (privKey: CryptoKey, password: string) => 
   return `-----BEGIN PRIVATE KEY-----\n${wrapPEM(binaryDerString)}\n-----END PRIVATE KEY-----`
 }
 
-export const generateSigature = async (privkey: CryptoKey, data: string) => {
+export const generateSignature = async (privkey: CryptoKey, data: string) => {
   const signature = await crypto.subtle.sign(
     {
       name: 'ECDSA',
